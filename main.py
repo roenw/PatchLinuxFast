@@ -23,7 +23,7 @@ def animate():
     for c in itertools.cycle(['|', '/', '-', '\\']):
         if done:
             break
-        sys.stdout.write('\rWorking   [' + c + ']')
+        sys.stdout.write('\rWorking...   [' + c + ']')
         sys.stdout.flush()
         time.sleep(0.1)
 
@@ -76,10 +76,17 @@ def run_command_with_loading(command, ip, uname, passwd):
 def perform_updates():
     def update_ubuntu(ip):
         print(colored("Updating package lists on " + system_ip + "...", 'cyan'))
-        run_command_with_loading("ls -l", ip, username, password)
+        run_command_with_loading("apt-get update", ip, username, password)
         print(colored("Upgrading packages on " + system_ip + "...", 'blue'))
-        run_command_with_loading("ls -l", ip, username, password)
-        print(colored("The update process appears to have exited. Please check output to verify successful upgrading.", "white", "on_green"))
+        run_command_with_loading("apt-get -y upgrade", ip, username, password)
+        print(colored("The update process appears to have exited. Please check output to verify successful upgrading.",
+                      "green"))
+
+    def update_redhat(ip):
+        print(colored("Upgrading packages on " + system_ip + "...", 'blue'))
+        run_command_with_loading("dnf update -y", ip, username, password)
+        print(colored("The update process appears to have exited. Please check output to verify successful upgrading.",
+                      "green"))
 
     # Main updating function
     system_ip = input("System IP to patch: ")
@@ -88,11 +95,27 @@ def perform_updates():
     if system_type == "ubuntu" or system_type == "u":
         print(colored("\nAttempting to update Ubuntu system located at " + system_ip, 'cyan'))
         update_ubuntu(system_ip)
+
     elif system_type == "redhat" or system_type == "r":
-        print("redhat")
+        print(colored("\nAttempting to update Red Hat system located at " + system_ip, 'cyan'))
+        update_redhat(system_ip)
     else:
         print(colored("\nInvalid system type. Expected \"ubuntu\" or \"redhat\"", 'red'))
         return
+
+    if mode == "i":
+        again = input("Do you have another system you'd like to update? [y/n]: ")
+
+        if again == "y":
+            use_same_creds = input("Use the same credentials? [y/n]: ")
+            if use_same_creds == "y":
+                perform_updates()
+            else:
+                get_credentials()
+                perform_updates()
+        else:
+            print(colored("\nHave a nice day!", "blue"))
+            exit(0)
 
 
 if __name__ == '__main__':
